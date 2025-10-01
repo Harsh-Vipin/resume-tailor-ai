@@ -16,10 +16,38 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.13"
 dependencies = [
     "fastapi>=0.104.0",
     "uvicorn[standard]>=0.24.0",
     "python-multipart>=0.0.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+resume-tailor = "app.main:main"
+
+# Hatch configuration for packaging
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+# UV configuration
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
 ]
