@@ -1,0 +1,1 @@
+"""Resume Tailor AI FastAPI Application"""
