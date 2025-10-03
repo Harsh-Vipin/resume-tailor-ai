@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional, AsyncGenerator
 from fastapi import FastAPI, Request, HTTPException
 from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Import logging configuration and middleware
@@ -57,13 +59,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Shutdown
     logger.info("Shutting down Resume Tailor AI application")
 
-# Create FastAPI app instance
-app = FastAPI(
-    title="Resume Tailor AI",
-    description="AI-powered resume tailoring application",
-    version="0.1.0"
-)
-
 # Create FastAPI app instance with lifespan
 app = FastAPI(
     title=settings.app.app_name,
@@ -73,20 +68,16 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add middleware (order matters - ErrorHandling should be first)
-app.add_middleware(ErrorHandlingMiddleware)
-app.add_middleware(LoggingMiddleware)
-
-# Get logger for this module
-logger = logging.getLogger("resume_tailor.main")
-app = FastAPI(
-    title="Resume Tailor AI",
-    description="AI-powered resume tailoring application",
-    version="0.1.0",
-    lifespan=lifespan
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.security.cors_origins,
+    allow_credentials=settings.security.cors_credentials,
+    allow_methods=settings.security.cors_methods,
+    allow_headers=settings.security.cors_headers,
 )
 
-# Add middleware (order matters - ErrorHandling should be first)
+# Add other middleware (order matters - ErrorHandling should be first, CORS is already added)
 app.add_middleware(ErrorHandlingMiddleware)
 app.add_middleware(LoggingMiddleware)
 
