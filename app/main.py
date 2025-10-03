@@ -11,8 +11,9 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Any, Optional, AsyncGenerator
+from typing import Dict, Any, Optional, AsyncGenerator, List
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from fastapi.responses import JSONResponse
 
@@ -26,6 +27,12 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOG_FILE = os.getenv("LOG_FILE", "logs/resume_tailor.log")
 ENABLE_CONSOLE_LOGGING = os.getenv("ENABLE_CONSOLE_LOGGING", "true").lower() == "true"
 ENABLE_JSON_LOGGING = os.getenv("ENABLE_JSON_LOGGING", "false").lower() == "true"
+
+# CORS configuration from environment variables
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
+CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
+CORS_ALLOW_METHODS = os.getenv("CORS_ALLOW_METHODS", "*").split(",")
+CORS_ALLOW_HEADERS = os.getenv("CORS_ALLOW_HEADERS", "*").split(",")
 
 # Configure logging
 setup_logging(
@@ -48,18 +55,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info(f"Log file: {LOG_FILE}")
     logger.info(f"Console logging: {ENABLE_CONSOLE_LOGGING}")
     logger.info(f"JSON logging: {ENABLE_JSON_LOGGING}")
+    logger.info(f"CORS origins: {CORS_ORIGINS}")
+    logger.info(f"CORS credentials: {CORS_ALLOW_CREDENTIALS}")
 
     yield
 
     # Shutdown
     logger.info("Shutting down Resume Tailor AI application")
-
-# Create FastAPI app instance
-app = FastAPI(
-    title="Resume Tailor AI",
-    description="AI-powered resume tailoring application",
-    version="0.1.0"
-)
 
 # Create FastAPI app instance with lifespan
 app = FastAPI(
@@ -69,7 +71,16 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add middleware (order matters - ErrorHandling should be first)
+# Add CORS middleware (should be added first to handle preflight requests)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=CORS_ALLOW_CREDENTIALS,
+    allow_methods=CORS_ALLOW_METHODS,
+    allow_headers=CORS_ALLOW_HEADERS,
+)
+
+# Add custom middleware (order matters - ErrorHandling should be after CORS)
 app.add_middleware(ErrorHandlingMiddleware)
 app.add_middleware(LoggingMiddleware)
 

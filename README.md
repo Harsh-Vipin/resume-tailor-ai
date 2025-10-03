@@ -44,6 +44,42 @@ This project uses [UV](https://github.com/astral-sh/uv) as the package manager f
    uv sync
    ```
 
+### ⚙️ Configuration
+
+The application can be configured using environment variables:
+
+#### Logging Configuration
+- `LOG_LEVEL` - Logging level (default: `INFO`)
+  - Options: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+- `LOG_FILE` - Path to log file (default: `logs/resume_tailor.log`)
+- `ENABLE_CONSOLE_LOGGING` - Enable console output (default: `true`)
+- `ENABLE_JSON_LOGGING` - Use JSON format for logs (default: `false`)
+
+#### CORS Configuration
+- `CORS_ORIGINS` - Comma-separated list of allowed origins (default: `*`)
+  - Example: `http://localhost:3000,https://example.com`
+  - Use `*` to allow all origins (not recommended for production)
+- `CORS_ALLOW_CREDENTIALS` - Allow credentials in CORS requests (default: `true`)
+- `CORS_ALLOW_METHODS` - Comma-separated list of allowed HTTP methods (default: `*`)
+  - Example: `GET,POST,PUT,DELETE`
+- `CORS_ALLOW_HEADERS` - Comma-separated list of allowed headers (default: `*`)
+  - Example: `Content-Type,Authorization`
+
+**Example `.env` file:**
+```bash
+# Logging
+LOG_LEVEL=DEBUG
+LOG_FILE=logs/app.log
+ENABLE_CONSOLE_LOGGING=true
+ENABLE_JSON_LOGGING=false
+
+# CORS
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+CORS_ALLOW_CREDENTIALS=true
+CORS_ALLOW_METHODS=GET,POST,PUT,DELETE,OPTIONS
+CORS_ALLOW_HEADERS=Content-Type,Authorization
+```
+
 ### 🏃‍♂️ Running the Application
 
 #### Option 1: Using UV directly
@@ -99,11 +135,15 @@ Once running, you can access:
 resume-tailor-ai/
 ├── app/                    # FastAPI application
 │   ├── __init__.py
-│   └── main.py            # Main application entry point
+│   ├── main.py            # Main application entry point
+│   ├── middleware.py      # Custom middleware (Logging, Error handling)
+│   └── logging_config.py  # Logging configuration
+├── tests/                 # Test suite
+│   ├── test_health.py     # Health endpoint tests
+│   └── ...
 ├── scripts/               # Development scripts
 │   └── dev.py            # Development server runner
 ├── pyproject.toml        # Project configuration and dependencies
-├── uv.toml              # UV-specific configuration
 ├── Makefile             # Common development commands
 └── README.md
 
