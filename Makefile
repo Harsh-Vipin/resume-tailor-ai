@@ -1,4 +1,4 @@
-.PHONY: help install dev run test lint format clean
+.PHONY: help install dev run test test-logging test-logging-manual lint format clean
 
 # Default target
 help:
@@ -9,6 +9,8 @@ help:
 	@echo "  dev         - Install development dependencies"
 	@echo "  run         - Run the development server"
 	@echo "  test        - Run tests"
+	@echo "  test-logging        - Run comprehensive logging tests"
+	@echo "  test-logging-manual - Run manual logging tests"
 	@echo "  lint        - Run linting checks"
 	@echo "  format      - Format code using black"
 	@echo "  clean       - Clean up cache and build artifacts"
@@ -33,6 +35,18 @@ run-script:
 # Run tests
 test:
 	uv run pytest
+
+# Run comprehensive logging tests (requires running server)
+test-logging:
+	@echo "Running comprehensive logging tests..."
+	@echo "Make sure server is running: make run (in another terminal)"
+	uv run python tests/test_logging_comprehensive.py
+
+# Run manual logging tests (requires running server)  
+test-logging-manual:
+	@echo "Running manual logging tests..."
+	@echo "Make sure server is running: make run (in another terminal)"
+	uv run python tests/test_logging_manual.py
 
 # Run linting
 lint:
