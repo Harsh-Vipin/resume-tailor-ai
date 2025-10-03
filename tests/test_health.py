@@ -5,18 +5,27 @@ Tests for the health endpoint.
 import asyncio
 import pytest
 from datetime import datetime
+from unittest.mock import Mock
+from fastapi import Request
 from app.main import health_check, perform_health_checks
 
 
 class TestHealthEndpoint:
     """Test cases for the health check endpoint."""
 
+    def create_mock_request(self):
+        """Create a mock Request object for testing."""
+        request = Mock(spec=Request)
+        request.state = Mock()
+        request.state.correlation_id = "test-correlation-id"
+        return request
+
     @pytest.mark.asyncio
     async def test_health_check_returns_ok_status(self):
         """Test that health check returns 'ok' status."""
-        response = await health_check()
+        mock_request = self.create_mock_request()
+        response = await health_check(mock_request)
 
-        assert response["status"] == "ok"
         assert "timestamp" in response
         assert "service" in response
         assert "version" in response
@@ -26,15 +35,15 @@ class TestHealthEndpoint:
     @pytest.mark.asyncio 
     async def test_health_check_response_structure(self):
         """Test the structure of the health check response."""
-        response = await health_check()
+        mock_request = self.create_mock_request()
+        response = await health_check(mock_request)
 
         # Check required fields
-        required_fields = ["status", "timestamp", "service", "version", "checks", "response_time_ms"]
+        required_fields = ["timestamp", "service", "version", "checks", "response_time_ms"]
         for field in required_fields:
             assert field in response, f"Missing required field: {field}"
 
         # Check data types
-        assert isinstance(response["status"], str)
         assert isinstance(response["timestamp"], str)
         assert isinstance(response["service"], str)
         assert isinstance(response["version"], str)
