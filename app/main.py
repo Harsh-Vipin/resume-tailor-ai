@@ -6,9 +6,9 @@ A FastAPI application for AI-powered resume tailoring.
 
 import asyncio
 import logging
-import os
 import sys
 import time
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, Optional, AsyncGenerator
@@ -19,6 +19,9 @@ from fastapi.responses import JSONResponse
 # Import logging configuration and middleware
 from .logging_config import setup_logging
 from .middleware import LoggingMiddleware, ErrorHandlingMiddleware
+
+# Import settings/configuration
+from .config import settings  # Make sure you have a config.py with a 'settings' object
 
 # Set up logging before creating the app
 # Get configuration from environment variables or use defaults
@@ -44,10 +47,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan event handler."""
     # Startup
     logger.info("Starting Resume Tailor AI application")
-    logger.info(f"Log level: {LOG_LEVEL}")
-    logger.info(f"Log file: {LOG_FILE}")
-    logger.info(f"Console logging: {ENABLE_CONSOLE_LOGGING}")
-    logger.info(f"JSON logging: {ENABLE_JSON_LOGGING}")
+    logger.info(f"Environment: {settings.app.environment}")
+    logger.info(f"Debug mode: {settings.app.debug}")
+    logger.info(f"Log level: {settings.logging.log_level}")
+    logger.info(f"AI features enabled: {settings.app.enable_ai_features}")
 
     yield
 
@@ -62,6 +65,20 @@ app = FastAPI(
 )
 
 # Create FastAPI app instance with lifespan
+app = FastAPI(
+    title=settings.app.app_name,
+    description=settings.app.app_description,
+    version=settings.app.app_version,
+    debug=settings.app.debug,
+    lifespan=lifespan
+)
+
+# Add middleware (order matters - ErrorHandling should be first)
+app.add_middleware(ErrorHandlingMiddleware)
+app.add_middleware(LoggingMiddleware)
+
+# Get logger for this module
+logger = logging.getLogger("resume_tailor.main")
 app = FastAPI(
     title="Resume Tailor AI",
     description="AI-powered resume tailoring application",
@@ -85,9 +102,10 @@ async def root(request: Request):
     )
 
     return {
-        "message": "Hello World", 
-        "app": "Resume Tailor AI", 
-        "version": "0.1.0",
+        "message": "Welcome to Resume Tailor AI",
+        "app": settings.app.app_name,
+        "version": settings.app.app_version,
+        "environment": settings.app.environment,
         "correlation_id": correlation_id
     }
 
@@ -115,8 +133,9 @@ async def health_check(request: Request) -> Dict[str, Any]:
     health_response = {
         "status": "ok",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "service": "Resume Tailor AI",
-        "version": "0.1.0",
+        "service": settings.app.app_name,
+        "version": settings.app.app_version,
+        "environment": settings.app.environment,
         "correlation_id": correlation_id
     }
 
@@ -326,9 +345,9 @@ def main():
 
     uvicorn.run(
         "app.main:app", 
-        host="127.0.0.1", 
-        port=8000, 
-        reload=True,
+        host=settings.app.host,
+        port=settings.app.port,
+        reload=settings.app.reload,
         reload_dirs=[str(project_root / "app")],
         log_level="info"
     )
